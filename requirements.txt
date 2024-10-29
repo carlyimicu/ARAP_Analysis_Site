@@ -1,0 +1,6 @@
+echo "streamlit
+pandas
+plotly
+st-aggrid
+pyyaml
+openpyxl" > requirements.txt
