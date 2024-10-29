@@ -1,6 +1,6 @@
 streamlit
 pandas
 plotly
-st_aggrid
+streamlit-aggrid
 pyyaml
 openpyxl
