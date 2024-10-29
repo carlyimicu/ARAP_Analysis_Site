@@ -1,0 +1,69 @@
+# File paths
+EXISTING_FILE_PATH: "AP_Files/updated_all_stack.xlsx"
+
+UPDATED_PO_DATA_PATH: "AR_Files/AR_Analysis.xlsx"
+
+NEW_FILE_PATH: "summary_table_updated_analysis.xlsx"
+
+
+
+# Constants
+CORRECT_CATEGORY_ORDER:
+  - Mechanical
+  - Electrical
+  - Steel
+  - Civil
+  - Others
+
+# Mappings
+TYPE_MAP:
+  Speed Gate: Low Voltage
+  UPW: UPW
+  WWT: WWT
+  Slurry: Chemical
+  TMAH: WWT
+  Chemical: Chemical
+  Barcode: Low Voltage
+  Base-Build: Base-Build
+  AMHS: AMHS
+  VOC: Low Voltage
+  CCTV: Low Voltage
+  AMC THC: Low Voltage
+  Pipeline: Water_Sewer
+  W-H2SO4: WWT
+  Oil drain pipe work: WWT
+  5G: Low Voltage
+  Frontage Line Hydrant: Water_Sewer
+  Penetration Pipe: WWT
+  Chemical Lab: Chemical
+  GF Agru Material: WWT
+  Triazole: WWT
+  Hot DI: Chemical
+  Labor Incentive: Base-Build
+  LSC connector: Others
+  chemical safety cabinet: Chemical
+  Water: WWT
+  VOC THC: Low Voltage
+  WWT T&M: WWT
+  General Condition: Base-Build
+  UPW and Chemical: UPW
+  Low Voltage: Low Voltage
+  SDS: Chemical
+  CDS: Chemical
+  Shared Cost: Others
+  Office Supplies: Others
+  LV PDS: Low Voltage
+  Hookup: Others
+  光阻櫃: Others
+
+MAIN_PAGE_MAPPING:
+  Water/Sewer: Water_Sewer
+  VOC AMC THC: Low Voltage
+  General Condition: Base-Build
+
+# Sheet names to keep after processing
+SHEETS_TO_KEEP:
+  - pc_overview
+  - Combined PM Types
+  - Detailed Combined PM Types
+  - Base-Build_breakdown
