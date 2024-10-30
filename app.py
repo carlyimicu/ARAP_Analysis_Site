@@ -479,6 +479,26 @@ def main():
                     hide_index=False
                 )
                 
+                # Create a new dataframe for the ratio calculations
+                ratio_df = pd.DataFrame(index=pivot_df.index)
+
+                # Calculate the ratios
+                ratio_df['CO / Main'] = (pivot_df['CO'] / pivot_df['Main'] * 100).round(2)
+                ratio_df['Added / Main'] = (pivot_df['Added'] / pivot_df['Main'] * 100).round(2)
+                ratio_df['(CO+Added) / Main'] = ((pivot_df['CO'] + pivot_df['Added']) / pivot_df['Main'] * 100).round(2)
+
+                # Format with % symbol
+                for column in ratio_df.columns:
+                    ratio_df[column] = ratio_df[column].astype(str) + '%'
+
+                # Display the new table
+                st.subheader("Change Order Ratios by Main Page")
+                st.dataframe(
+                    ratio_df,
+                    use_container_width=True,
+                    hide_index=False
+                )
+                
                 # Add download button for the analysis
                 csv = grouped_df.to_csv(index=False)
                 st.download_button(
