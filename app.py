@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
-import yaml
 import plotly.express as px 
 from st_aggrid import AgGrid, GridOptionsBuilder
 from st_aggrid.grid_options_builder import GridOptionsBuilder
@@ -155,13 +154,6 @@ def get_ar_column_descriptions():
 def main():
     st.title("MICU AR/AP Breakdown Analysis")
     
-    # Sidebar for configuration
-    st.sidebar.header("Configuration")
-    
-    # Load config
-    with open('config.yaml', 'r') as file:
-        config = yaml.safe_load(file)
-    
     # Main tabs - add AR Analysis
     tab1, tab2, tab3 = st.tabs(["AP Analysis", "AR Analysis", "Data View"])
     
@@ -241,8 +233,8 @@ def main():
                     # Add % symbol
                     grouped_df['Percentage of PM Type'] = grouped_df['Percentage of PM Type'].astype(str) + '%'
                 
-                # Sort by PM Type and Total Amount descending
-                grouped_df = grouped_df.sort_values(['PM Type', 'Total Amount'], ascending=[True, False])
+                # Sort by first selected column and Total Amount
+                grouped_df = grouped_df.sort_values([selected_columns[0], 'Total Amount'], ascending=[True, False])
                 
                 # Display results
                 st.subheader("Breakdown By Selected Columns")
@@ -256,14 +248,72 @@ def main():
                 
                 # Create visualization
                 if len(selected_columns) <= 2:  # Bar chart for 1-2 columns
-                    fig = px.bar(
-                        grouped_df.head(10),  # Top 10 for readability
-                        x=selected_columns[0],
-                        y='Total Amount',
-                        color=selected_columns[1] if len(selected_columns) > 1 else None,
-                        title=f'Top 10 by Total Amount',
-                        labels={'Total Amount': 'Total Amount ($)'},
-                    )
+                    first_col = selected_columns[0]
+                    second_col = selected_columns[1] if len(selected_columns) > 1 else None
+                    
+                    # Get total amount for each value in first column
+                    first_col_totals = grouped_df.groupby(first_col)['Total Amount'].sum().sort_values(ascending=False)
+                    
+                    # If more than 10 unique values in first column, take top 10
+                    if len(first_col_totals) > 10:
+                        top_10_first_col = first_col_totals.head(10).index
+                        plot_df = grouped_df[grouped_df[first_col].isin(top_10_first_col)].copy()
+                        plot_df[first_col] = pd.Categorical(
+                            plot_df[first_col], 
+                            categories=top_10_first_col, 
+                            ordered=True
+                        )
+                        plot_df = plot_df.sort_values([first_col, 'Total Amount'], ascending=[True, False])
+                    else:
+                        plot_df = grouped_df.copy()
+                        plot_df[first_col] = pd.Categorical(
+                            plot_df[first_col], 
+                            categories=first_col_totals.index, 
+                            ordered=True
+                        )
+                        plot_df = plot_df.sort_values([first_col, 'Total Amount'], ascending=[True, False])
+                    
+                    if second_col:  # Two columns selected
+                        # Calculate percentages within each first column category
+                        plot_df['Percentage of Total'] = plot_df.apply(
+                            lambda row: (row['Total Amount'] / first_col_totals[row[first_col]]) * 100,
+                            axis=1
+                        )
+                        
+                        fig = px.bar(
+                            plot_df,
+                            x=first_col,
+                            y='Total Amount',
+                            color=second_col,
+                            title=f'Amount by {first_col}' + 
+                                  f' (Top 10 by Total Amount)' if len(first_col_totals) > 10 else '',
+                            labels={'Total Amount': 'Total Amount ($)'},
+                            custom_data=[plot_df['Percentage of Total'], plot_df[second_col]]
+                        )
+                        
+                        fig.update_traces(
+                            hovertemplate=(
+                                "%{x}<br>" +
+                                "%{customdata[1]}: %{y:,.2f}<br>" +
+                                "Percentage within %{x}: %{customdata[0]:.1f}%<extra></extra>"
+                            )
+                        )
+                    else:  # Single column
+                        fig = px.bar(
+                            plot_df,
+                            x=first_col,
+                            y='Total Amount',
+                            title=f'Amount by {first_col}' + 
+                                  f' (Top 10 by Total Amount)' if len(first_col_totals) > 10 else '',
+                            labels={'Total Amount': 'Total Amount ($)'}
+                        )
+                        
+                        fig.update_traces(
+                            hovertemplate=(
+                                "%{x}<br>" +
+                                "Amount: %{y:,.2f}<extra></extra>"
+                            )
+                        )
                 else:  # Treemap for 3+ columns
                     fig = px.treemap(
                         grouped_df,
@@ -411,14 +461,72 @@ def main():
                 
                 # Create visualization
                 if len(selected_columns) <= 2:  # Bar chart for 1-2 columns
-                    fig = px.bar(
-                        grouped_df.head(10),  # Top 10 for readability
-                        x=selected_columns[0],
-                        y='Total Amount',
-                        color=selected_columns[1] if len(selected_columns) > 1 else None,
-                        title=f'Top 10 by Total Amount',
-                        labels={'Total Amount': 'Total Amount ($)'},
-                    )
+                    first_col = selected_columns[0]
+                    second_col = selected_columns[1] if len(selected_columns) > 1 else None
+                    
+                    # Get total amount for each value in first column
+                    first_col_totals = grouped_df.groupby(first_col)['Total Amount'].sum().sort_values(ascending=False)
+                    
+                    # If more than 10 unique values in first column, take top 10
+                    if len(first_col_totals) > 10:
+                        top_10_first_col = first_col_totals.head(10).index
+                        plot_df = grouped_df[grouped_df[first_col].isin(top_10_first_col)].copy()
+                        plot_df[first_col] = pd.Categorical(
+                            plot_df[first_col], 
+                            categories=top_10_first_col, 
+                            ordered=True
+                        )
+                        plot_df = plot_df.sort_values([first_col, 'Total Amount'], ascending=[True, False])
+                    else:
+                        plot_df = grouped_df.copy()
+                        plot_df[first_col] = pd.Categorical(
+                            plot_df[first_col], 
+                            categories=first_col_totals.index, 
+                            ordered=True
+                        )
+                        plot_df = plot_df.sort_values([first_col, 'Total Amount'], ascending=[True, False])
+                    
+                    if second_col:  # Two columns selected
+                        # Calculate percentages within each first column category
+                        plot_df['Percentage of Total'] = plot_df.apply(
+                            lambda row: (row['Total Amount'] / first_col_totals[row[first_col]]) * 100,
+                            axis=1
+                        )
+                        
+                        fig = px.bar(
+                            plot_df,
+                            x=first_col,
+                            y='Total Amount',
+                            color=second_col,
+                            title=f'Amount by {first_col}' + 
+                                  f' (Top 10 by Total Amount)' if len(first_col_totals) > 10 else '',
+                            labels={'Total Amount': 'Total Amount ($)'},
+                            custom_data=[plot_df['Percentage of Total'], plot_df[second_col]]
+                        )
+                        
+                        fig.update_traces(
+                            hovertemplate=(
+                                "%{x}<br>" +
+                                "%{customdata[1]}: %{y:,.2f}<br>" +
+                                "Percentage within %{x}: %{customdata[0]:.1f}%<extra></extra>"
+                            )
+                        )
+                    else:  # Single column
+                        fig = px.bar(
+                            plot_df,
+                            x=first_col,
+                            y='Total Amount',
+                            title=f'Amount by {first_col}' + 
+                                  f' (Top 10 by Total Amount)' if len(first_col_totals) > 10 else '',
+                            labels={'Total Amount': 'Total Amount ($)'}
+                        )
+                        
+                        fig.update_traces(
+                            hovertemplate=(
+                                "%{x}<br>" +
+                                "Amount: %{y:,.2f}<extra></extra>"
+                            )
+                        )
                 else:  # Treemap for 3+ columns
                     fig = px.treemap(
                         grouped_df,
