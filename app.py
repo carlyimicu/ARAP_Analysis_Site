@@ -155,6 +155,13 @@ def get_ar_column_descriptions():
 def main():
     st.title("MICU AR/AP Breakdown Analysis")
     
+    # Sidebar for configuration
+    st.sidebar.header("Configuration")
+    
+    # Load config
+    with open('config.yaml', 'r') as file:
+        config = yaml.safe_load(file)
+    
     # Main tabs - add AR Analysis
     tab1, tab2, tab3 = st.tabs(["AP Analysis", "AR Analysis", "Data View"])
     
