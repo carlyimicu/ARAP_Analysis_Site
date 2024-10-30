@@ -429,6 +429,56 @@ def main():
                 
                 st.plotly_chart(fig, use_container_width=True)
                 
+                # First clean up blank/NaN/0 values in CO/Added
+                df_ar['CO/Added'] = df_ar['CO/Added'].fillna('Unspecified')
+                df_ar['CO/Added'] = df_ar['CO/Added'].replace(['', '0', 0], 'Unspecified')
+
+                # Define column order
+                column_order = [
+                    'Main',
+                    'CO',
+                    'Added',
+                    'Unspecified'
+                ]
+
+                # Create pivot tables for percentages and amounts
+                pivot_df = df_ar.pivot_table(
+                    values='Total Contract $',
+                    index='Main Page',
+                    columns='CO/Added',
+                    aggfunc='sum'
+                ).fillna(0)
+
+                # Reorder columns (and add any missing columns with zeros)
+                for col in column_order:
+                    if col not in pivot_df.columns:
+                        pivot_df[col] = 0
+                pivot_df = pivot_df[column_order]
+
+                # Calculate percentages
+                pivot_pct = pivot_df.div(pivot_df.sum(axis=1), axis=0) * 100
+                pivot_pct_display = pivot_pct.round(2)
+
+                # Format with % symbol
+                for column in pivot_pct_display.columns:
+                    pivot_pct_display[column] = pivot_pct_display[column].astype(str) + '%'
+
+                # Display the tables
+                st.subheader("Percentage Breakdown by Main Page")
+                st.dataframe(
+                    pivot_pct_display,
+                    use_container_width=True,
+                    hide_index=False
+                )
+
+                # Also show the actual amounts
+                st.subheader("Amount Breakdown by Main Page (in dollars)")
+                st.dataframe(
+                    pivot_df.round(2),
+                    use_container_width=True,
+                    hide_index=False
+                )
+                
                 # Add download button for the analysis
                 csv = grouped_df.to_csv(index=False)
                 st.download_button(
