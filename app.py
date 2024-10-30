@@ -492,7 +492,7 @@ def main():
                     ratio_df[column] = ratio_df[column].astype(str) + '%'
 
                 # Display the new table
-                st.subheader("Change Order Ratios by Main Page")
+                st.subheader("Change Order Ratios by Main Project")
                 st.dataframe(
                     ratio_df,
                     use_container_width=True,
