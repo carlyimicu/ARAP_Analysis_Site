@@ -155,6 +155,13 @@ def get_ar_column_descriptions():
 def main():
     st.title("MICU AR/AP Breakdown Analysis")
     
+    # Sidebar for configuration
+    st.sidebar.header("Configuration")
+    
+    # Load config
+    with open('config.yaml', 'r') as file:
+        config = yaml.safe_load(file)
+    
     # Main tabs - add AR Analysis
     tab1, tab2, tab3 = st.tabs(["AP Analysis", "AR Analysis", "Data View"])
     
@@ -202,6 +209,9 @@ def main():
             selected_columns = [opt.split(' - ')[0] for opt in selected_formatted]
             
             if selected_columns:
+                # First, calculate total amount per PM Type
+                pm_type_totals = df_ap.groupby('PM Type')['Amount'].sum().to_dict()
+                
                 # Create grouped analysis
                 grouped_df = df_ap.groupby(selected_columns).agg({
                     'Amount': ['sum', 'count']
@@ -217,8 +227,22 @@ def main():
                     'Amount_count': 'Count'
                 })
                 
-                # Sort by Total Amount descending
-                grouped_df = grouped_df.sort_values('Total Amount', ascending=False)
+                # Add percentage calculation if PM Type is selected
+                if 'PM Type' in selected_columns:
+                    # Calculate percentage
+                    grouped_df['Percentage of PM Type'] = grouped_df.apply(
+                        lambda row: (row['Total Amount'] / pm_type_totals[row['PM Type']]) * 100,
+                        axis=1
+                    )
+                    
+                    # Format percentage to 2 decimal places
+                    grouped_df['Percentage of PM Type'] = grouped_df['Percentage of PM Type'].round(2)
+                    
+                    # Add % symbol
+                    grouped_df['Percentage of PM Type'] = grouped_df['Percentage of PM Type'].astype(str) + '%'
+                
+                # Sort by PM Type and Total Amount descending
+                grouped_df = grouped_df.sort_values(['PM Type', 'Total Amount'], ascending=[True, False])
                 
                 # Display results
                 st.subheader("Breakdown By Selected Columns")
@@ -249,6 +273,57 @@ def main():
                     )
                 
                 st.plotly_chart(fig, use_container_width=True)
+                
+                # First clean up blank/NaN/0 values in Main/CO/DCR
+                df_ap['Main/CO/DCR'] = df_ap['Main/CO/DCR'].fillna('Unspecified')
+                df_ap['Main/CO/DCR'] = df_ap['Main/CO/DCR'].replace(['', '0', 0], 'Unspecified')
+
+                # Define column order
+                column_order = [
+                    'Main Contract Scope',
+                    'CO Scope (adding/additional scope)',
+                    'DCR Scope',
+                    'The budget execution does not pertain to this project',
+                    'Unspecified'
+                ]
+
+                # Create pivot tables for percentages and amounts
+                pivot_df = df_ap.pivot_table(
+                    values='Amount',
+                    index='PM Type',
+                    columns='Main/CO/DCR',
+                    aggfunc='sum'
+                ).fillna(0)
+
+                # Reorder columns (and add any missing columns with zeros)
+                for col in column_order:
+                    if col not in pivot_df.columns:
+                        pivot_df[col] = 0
+                pivot_df = pivot_df[column_order]
+
+                # Calculate percentages
+                pivot_pct = pivot_df.div(pivot_df.sum(axis=1), axis=0) * 100
+                pivot_pct_display = pivot_pct.round(2)
+
+                # Format with % symbol
+                for column in pivot_pct_display.columns:
+                    pivot_pct_display[column] = pivot_pct_display[column].astype(str) + '%'
+
+                # Display the tables
+                st.subheader("Percentage Breakdown by PM Type")
+                st.dataframe(
+                    pivot_pct_display,
+                    use_container_width=True,
+                    hide_index=False
+                )
+
+                # Also show the actual amounts
+                st.subheader("Amount Breakdown by PM Type (in dollars)")
+                st.dataframe(
+                    pivot_df.round(2),
+                    use_container_width=True,
+                    hide_index=False
+                )
                 
                 # Add download button for the analysis
                 csv = grouped_df.to_csv(index=False)
