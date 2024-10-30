@@ -359,22 +359,30 @@ def main():
                 for column in pivot_pct_display.columns:
                     pivot_pct_display[column] = pivot_pct_display[column].astype(str) + '%'
 
-                # Display the tables
-                st.subheader("Percentage Breakdown by PM Type")
-                st.dataframe(
-                    pivot_pct_display,
-                    use_container_width=True,
-                    hide_index=False
+                # View selection dropdown
+                selected_view = st.selectbox(
+                    "Select Analysis View:",
+                    options=[
+                        "Percentage Breakdown by PM Type",
+                        "Amount Breakdown by PM Type (in dollars)"
+                    ],
+                    key='ap_view'  # Unique key for AP
                 )
 
-                # Also show the actual amounts
-                st.subheader("Amount Breakdown by PM Type (in dollars)")
-                st.dataframe(
-                    pivot_df.round(2),
-                    use_container_width=True,
-                    hide_index=False
-                )
-                
+                # Display selected view for AP
+                if selected_view == "Percentage Breakdown by PM Type":
+                    st.dataframe(
+                        pivot_pct_display,
+                        use_container_width=True,
+                        hide_index=False
+                    )
+                elif selected_view == "Amount Breakdown by PM Type (in dollars)":
+                    st.dataframe(
+                        pivot_df.round(2),
+                        use_container_width=True,
+                        hide_index=False
+                    )
+
                 # Add download button for the analysis
                 csv = grouped_df.to_csv(index=False)
                 st.download_button(
@@ -571,22 +579,6 @@ def main():
                 for column in pivot_pct_display.columns:
                     pivot_pct_display[column] = pivot_pct_display[column].astype(str) + '%'
 
-                # Display the tables
-                st.subheader("Percentage Breakdown by Main Page")
-                st.dataframe(
-                    pivot_pct_display,
-                    use_container_width=True,
-                    hide_index=False
-                )
-
-                # Also show the actual amounts
-                st.subheader("Amount Breakdown by Main Page (in dollars)")
-                st.dataframe(
-                    pivot_df.round(2),
-                    use_container_width=True,
-                    hide_index=False
-                )
-                
                 # Create a new dataframe for the ratio calculations
                 ratio_df = pd.DataFrame(index=pivot_df.index)
 
@@ -599,14 +591,37 @@ def main():
                 for column in ratio_df.columns:
                     ratio_df[column] = ratio_df[column].astype(str) + '%'
 
-                # Display the new table
-                st.subheader("Change Order Ratios by Main Project")
-                st.dataframe(
-                    ratio_df,
-                    use_container_width=True,
-                    hide_index=False
+                # View selection dropdown
+                selected_view = st.selectbox(
+                    "Select Analysis View:",
+                    options=[
+                        "Percentage Breakdown by Main Page",
+                        "Amount Breakdown by Main Page (in dollars)",
+                        "Change Order Ratios"
+                    ],
+                    key='ar_view'  # Unique key for AR
                 )
-                
+
+                # Display selected view for AR
+                if selected_view == "Percentage Breakdown by Main Page":
+                    st.dataframe(
+                        pivot_pct_display,
+                        use_container_width=True,
+                        hide_index=False
+                    )
+                elif selected_view == "Amount Breakdown by Main Page (in dollars)":
+                    st.dataframe(
+                        pivot_df.round(2),
+                        use_container_width=True,
+                        hide_index=False
+                    )
+                elif selected_view == "Change Order Ratios":
+                    st.dataframe(
+                        ratio_df,
+                        use_container_width=True,
+                        hide_index=False
+                    )
+
                 # Add download button for the analysis
                 csv = grouped_df.to_csv(index=False)
                 st.download_button(
