@@ -582,10 +582,10 @@ def main():
                 # Create a new dataframe for the ratio calculations
                 ratio_df = pd.DataFrame(index=pivot_df.index)
 
-                # Calculate the ratios
-                ratio_df['CO / Main'] = (pivot_df['CO'] / pivot_df['Main'] * 100).round(2)
-                ratio_df['Added / Main'] = (pivot_df['Added'] / pivot_df['Main'] * 100).round(2)
-                ratio_df['(CO+Added) / Main'] = ((pivot_df['CO'] + pivot_df['Added']) / pivot_df['Main'] * 100).round(2)
+                # Calculate the ratios with more descriptive names
+                ratio_df['Change Order %'] = (pivot_df['CO'] / pivot_df['Main'] * 100).round(2)
+                ratio_df['Added Work %'] = (pivot_df['Added'] / pivot_df['Main'] * 100).round(2)
+                ratio_df['Total Changes %'] = ((pivot_df['CO'] + pivot_df['Added']) / pivot_df['Main'] * 100).round(2)
 
                 # Format with % symbol
                 for column in ratio_df.columns:
